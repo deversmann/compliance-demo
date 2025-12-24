@@ -1,0 +1,20 @@
+---
+# defaults file for deploy_vm
+deploy_vm_name: "rhel-server-9_7"
+deploy_vm_base_domain: "example.com"
+deploy_vm_vcpus: 2
+deploy_vm_memory_mb: 4096
+deploy_vm_base_image: "/var/lib/libvirt/images/rhel-9.7-x86_64-kvm.qcow2"
+deploy_vm_disk_path: "/var/lib/libvirt/images/{{ deploy_vm_name }}.qcow2"
+deploy_vm_osinfo: "rhel9-unknown"
+deploy_vm_bridge: "bridge1"
+deploy_vm_network: "{{ undef() }}"
+
+deploy_vm_users:
+  - username: ansible
+    fullname: Ansible User
+    ssh_public_key: "{{ lookup('file', 'files/demo-id_rsa.pub') }}"
+    is_admin: true
+
+# For demo purposes: 'files/demo-id_rsa' is the private key to match the 
+# above referenced public key.

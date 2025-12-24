@@ -1,0 +1,16 @@
+---
+collections:
+  # - name: community.libvirt
+  #   version: ">=2.0.0"
+  #   source: https://galaxy.ansible.com
+
+  # using devel because: https://github.com/ansible-collections/community.libvirt/issues/218
+  - name: community.libvirt
+    type: git
+    version: "main"
+    source: https://github.com/ansible-collections/community.libvirt
+
+  - name: community.general
+    version: ">=8.0.0"
+    source: https://galaxy.ansible.com
+    
