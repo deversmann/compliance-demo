@@ -10,8 +10,8 @@
     common:
       deploy_vm_bridge: bridge0
       deploy_vm_base_domain: "aj.peripatetic.us"
-      deploy_vm_vcpus: 2
-      deploy_vm_memory_mb: 4096
+      deploy_vm_vcpus: 4
+      deploy_vm_memory_mb: 33554
       deploy_vm_disk_path: "/var/lib/libvirt/images/"
       deploy_vm_users:
         - username: sysadmin
