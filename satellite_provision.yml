@@ -13,10 +13,11 @@
       deploy_vm_vcpus: 4
       deploy_vm_memory_mb: 33554
       deploy_vm_disk_path: "/var/lib/libvirt/images/"
+      deploy_vm_disk_size_gb: 120
       deploy_vm_users:
         - username: sysadmin
           fullname: System Administrator
-          ssh_public_key: "< your ssh public key"
+          ssh_public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL8jbqqoC4GDbWKRFJYIO1n3UBlQtDbLZoZi8bF1d1yw jcorum@jcorum-mac"
           is_admin: true
 
     # list of values specific to each vm
