@@ -1,0 +1,39 @@
+---
+- name: Provision a KVM Virtual Machine for Satellite 
+  hosts: kvm_host
+  become: true
+  vars:
+    # Image
+    rhel9_7image: "/var/lib/libvirt/images/rhel-9.7-x86_64-kvm.qcow2"
+
+    # values common to all vms
+    common:
+      deploy_vm_bridge: bridge0
+      deploy_vm_base_domain: "aj.peripatetic.us"
+      deploy_vm_vcpus: 2
+      deploy_vm_memory_mb: 4096
+      deploy_vm_disk_path: "/var/lib/libvirt/images/"
+      deploy_vm_users:
+        - username: sysadmin
+          fullname: System Administrator
+          ssh_public_key: "< your ssh public key"
+          is_admin: true
+
+    # list of values specific to each vm
+    vm_specifics:
+      - deploy_vm_name: "satellite"
+        deploy_vm_base_image: "{{ rhel9_7image }}"
+        deploy_vm_osinfo: "rhel9-unknown"
+
+    # merged vm definitions
+    vm_definitions: "{{ vm_specifics | map('combine',common,list_merge='keep') }}"
+
+  tasks:
+    - name: Include deploy_vm role
+      ansible.builtin.include_role:
+        name: deploy_vm
+      loop: "{{ vm_definitions }}"
+      loop_control:
+        loop_var: deploy_vm_definition
+
+...
