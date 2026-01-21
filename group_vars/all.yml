@@ -26,47 +26,4 @@ satellite_systems:
     vm_disk_size: 35
     vm_install_iso: "rhel-9.7-x86_64-dvd.iso"
     vm_kickstart_file: rhel9.7.ks
-
-idm_systems: 
-  idm01:
-    vm_memory: 8192
-    vm_vcpus: 2
-    vm_osinfo_name: rhel10.1
-    vm_mac_address: 52:54:00:5c:62:e3
-    vm_disk_size: 45
-  idm02:
-    vm_memory: 8192
-    vm_vcpus: 2
-    vm_osinfo_name: rhel10.1
-    vm_mac_address: 52:54:00:3b:27:f1
-    vm_disk_size: 45
-  idm03:
-    vm_memory: 8192
-    vm_vcpus: 2
-    vm_osinfo_name: rhel10.1
-    vm_mac_address: 52:54:00:23:3c:66
-    vm_disk_size: 45
-  idm04:
-    vm_memory: 8192
-    vm_vcpus: 2
-    vm_osinfo_name: rhel10.1
-    vm_mac_address: 52:54:00:51:4a:fc
-    vm_disk_size: 45
-  client01:
-    vm_memory: 8192
-    vm_vcpus: 2
-    vm_osinfo_name: rhel10.1
-    vm_mac_address: 52:54:00:8f:37:22
-    vm_disk_size: 45
-  client02:
-    vm_memory: 8192
-    vm_vcpus: 2
-    vm_osinfo_name: rhel10.1
-    vm_mac_address: 52:54:00:4e:cb:a0
-    vm_disk_size: 45
-  client03:
-    vm_memory: 8192
-    vm_vcpus: 2
-    vm_osinfo_name: rhel10.1
-    vm_mac_address: 52:54:00:af:93:9e
-    vm_disk_size: 45
+    
