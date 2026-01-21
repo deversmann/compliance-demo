@@ -19,6 +19,18 @@
       - title: Red Hat rhel9 default content
         scap_file: /usr/share/xml/scap/ssg/content/satellite/ssg-rhel9-ds.xml
   tasks:
+
+    - name: "Upload manifest"
+      redhat.satellite.subscription_manifest:
+        username: "admin"
+        password: "{{ admin_password }}"
+        server_url: "{{ satellite_url }}"
+        validate_certs: false
+        organization: "{{ organization_name }}"
+        state: present
+        manifest_path: "manifest.zip"
+      delegate_to: localhost 
+
     - name: Create SCAP content
       redhat.satellite.scap_content:
         title: "{{ item.title }}"

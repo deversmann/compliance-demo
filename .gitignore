@@ -2,3 +2,4 @@
 .lock
 .vscode/
 extra_vars.yml
+manifest.zip
