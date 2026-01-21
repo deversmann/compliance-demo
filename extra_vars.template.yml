@@ -2,5 +2,8 @@
 rh_username: <your rh username>
 rh_password: <your rh password>
 
+rootpw_encrypted: <your encrypted root password https://access.redhat.com/solutions/221403
+authorized_key: "<your ssh public key>"
+
 admin_email: <your email address>
 sat_admin_password: <your initial admin password> 
