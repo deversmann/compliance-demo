@@ -1,40 +1,60 @@
----
-- name: Provision a KVM Virtual Machine for Satellite 
-  hosts: kvm_host
-  become: true
-  vars:
-    # Image
-    rhel9_7image: "/var/lib/libvirt/images/rhel-9.7-x86_64-kvm.qcow2"
-
-    # values common to all vms
-    common:
-      deploy_vm_bridge: bridge0
-      deploy_vm_base_domain: "aj.peripatetic.us"
-      deploy_vm_vcpus: 4
-      deploy_vm_memory_mb: 33554
-      deploy_vm_disk_path: "/var/lib/libvirt/images/"
-      deploy_vm_disk_size_gb: 120
-      deploy_vm_users:
-        - username: sysadmin
-          fullname: System Administrator
-          ssh_public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL8jbqqoC4GDbWKRFJYIO1n3UBlQtDbLZoZi8bF1d1yw jcorum@jcorum-mac"
-          is_admin: true
-
-    # list of values specific to each vm
-    vm_specifics:
-      - deploy_vm_name: "satellite"
-        deploy_vm_base_image: "{{ rhel9_7image }}"
-        deploy_vm_osinfo: "rhel9-unknown"
-
-    # merged vm definitions
-    vm_definitions: "{{ vm_specifics | map('combine',common,list_merge='keep') }}"
+--- 
+- name: Create vms for satellite
+  hosts: winter 
+  become: true 
+  # satellite_systems defined in group_vars/homelab.yml
 
   tasks:
-    - name: Include deploy_vm role
-      ansible.builtin.include_role:
-        name: deploy_vm
-      loop: "{{ vm_definitions }}"
-      loop_control:
-        loop_var: deploy_vm_definition
+    - name: Ensure kickstart files exist where libvirt can grab them 
+      ansible.builtin.copy:
+        src: "ks/{{ item }}" 
+        dest: "/var/lib/libvirt/boot/{{ item }}"
+      loop: 
+        - "rhel9.7.ks"
+        - "rhel10.1.ks"
 
-...
+    - name: Create vms for satellite
+      community.libvirt.virt_install:
+        name: "{{ item.key }}"
+        state: present
+        memory: "{{ item.value.vm_memory }}"
+        vcpus: "{{ item.value.vm_vcpus }}"
+        location: "/var/lib/libvirt/images/{{ item.value.vm_install_iso }}"
+        disks:
+          - path: "/var/lib/libvirt/images/{{ item.key }}.qcow2"
+            size: "{{ item.value.vm_disk_size | default('30') }}"
+        osinfo:
+          name: "{{ item.value.vm_osinfo_name }}"
+        graphics:
+          type: vnc
+        networks:
+          - bridge: bridge0
+            model:
+              type: virtio  
+            mac:
+              address: "{{ item.value.vm_mac_address }}"
+        initrd_inject: "/var/lib/libvirt/boot/{{ item.value.vm_kickstart_file }}"
+        extra_args: "inst.ks=file://{{ item.value.vm_kickstart_file }}"           
+      loop: "{{ satellite_systems | dict2items }}"
+      loop_control:
+          label: "{{ item.key }}"
+
+    - name: Wait for kickstart to complete and shutdown vms
+      community.libvirt.virt:
+        name: "{{ item.key }}"
+        command: status
+      register: vm_status
+      until: vm_status.status == 'shutdown'
+      retries: 20
+      delay: 60
+      loop: "{{ satellite_systems | dict2items }}"
+      loop_control:
+          label: "{{ item.key }}"
+
+    - name: Start up the VMs
+      community.libvirt.virt:
+        name: "{{ item.key }}"
+        state: running
+      loop: "{{ satellite_systems | dict2items }}"
+      loop_control:
+          label: "{{ item.key }}"

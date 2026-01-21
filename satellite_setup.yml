@@ -1,0 +1,35 @@
+- name: Setup Satellite for demo
+  hosts: satellite
+  become: yes 
+
+  vars: 
+    organization_name: "Jerry's Chop Shop"
+    admin_password: "{{ sat_admin_password }}"
+    location: "homelab"
+    satellite_url: https://sat01.aj.peripatetic.us 
+    default_scap_content:
+      - title: Red Hat rhel10 default content
+        scap_file: /usr/share/xml/scap/ssg/content/satellite/ssg-rhel10-ds.xml
+      - title: Red Hat rhel6 default content
+        scap_file: /usr/share/xml/scap/ssg/content/satellite/ssg-rhel6-ds.xml
+      - title: Red Hat rhel7 default content
+        scap_file: /usr/share/xml/scap/ssg/content/satellite/ssg-rhel7-ds.xml
+      - title: Red Hat rhel8 default content
+        scap_file: /usr/share/xml/scap/ssg/content/satellite/ssg-rhel8-ds.xml
+      - title: Red Hat rhel9 default content
+        scap_file: /usr/share/xml/scap/ssg/content/satellite/ssg-rhel9-ds.xml
+  tasks:
+    - name: Create SCAP content
+      redhat.satellite.scap_content:
+        title: "{{ item.title }}"
+        scap_file: "{{ item.scap_file }}"
+        organizations:
+          - "{{ organization_name }}"
+        locations:
+          - "{{ location }}"
+        server_url: "{{ satellite_url }}"
+        validate_certs: false
+        username: "admin"
+        password: "{{ admin_password }}"
+        state: present
+      loop: "{{ default_scap_content }}"
