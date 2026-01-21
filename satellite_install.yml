@@ -1,0 +1,53 @@
+---
+- name: Register and prep repos for Satellite install
+  hosts: satellite
+  become: yes 
+  vars:
+    rhc_state: present 
+    rhc_auth:
+      login:
+        username: "{{ rh_username }}"
+        password: "{{ rh_password }}"
+    rhc_repositories:
+      - { name: "rhel-9-for-x86_64-baseos-rpms", state: enabled }
+      - { name: "rhel-9-for-x86_64-appstream-rpms", state: enabled }
+      - { name: "codeready-builder-for-rhel-9-x86_64-rpms", state: disabled }
+      - { name: "satellite-6.16-for-rhel-9-x86_64-rpms", state: enabled }
+      - { name: "satellite-maintenance-6.16-for-rhel-9-x86_64-rpms", state: enabled }
+
+  roles:
+    - redhat.rhel_system_roles.rhc
+
+- name: Install Satellite 
+  hosts: satellite
+  become: yes 
+
+  vars: 
+    organization_name: "Jerry's Chop Shop"
+    admin_password: "{{ sat_admin_password }}"
+    location: "homelab"
+  tasks:
+
+    - name: Run Satellite installer 
+      ansible.builtin.include_role:
+        name: redhat.satellite_operations.installer
+      vars:
+        satellite_installer_scenario: satellite
+        satellite_installer_package: satellite-installer
+        satellite_installer_options:
+          - '--foreman-initial-organization "{{ organization_name }}"'
+          - '--foreman-initial-admin-username admin'
+          - '--foreman-initial-admin-password {{ admin_password }}'
+          - '--foreman-initial-location "{{ location }}"'
+
+- name: Set Satellite firewall rule
+  hosts: satellite
+  become: yes 
+  tasks:
+    - name: permanently enable RH-Satellite-6 service 
+      ansible.posix.firewalld:
+        service: RH-Satellite-6
+        state: enabled
+        permanent: true
+        immediate: true
+        offline: true

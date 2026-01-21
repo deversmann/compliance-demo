@@ -36,6 +36,7 @@
     vcpus: "{{ deploy_vm_vcpus }}"        
     disks: 
       - path: "{{ deploy_vm_disk_path }}{{ deploy_vm_name }}.qcow2"
+        size: "{{ deploy_vm_disk_size_gb | default('30') }}"
     import: true
     networks:
       - bridge: "{{ deploy_vm_bridge | default(omit) }}"

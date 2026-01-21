@@ -1,0 +1,60 @@
+--- 
+- name: Create vms for satellite
+  hosts: kvm_host 
+  become: true 
+  # satellite_systems defined in group_vars/homelab.yml
+
+  tasks:
+    - name: Ensure kickstart files exist where libvirt can grab them 
+      ansible.builtin.template:
+        src: "ks/{{ item }}" 
+        dest: "/var/lib/libvirt/boot/{{ item }}"
+      loop: 
+        - "rhel9.7.ks"
+        - "rhel10.1.ks"
+
+    - name: Create vms for satellite
+      community.libvirt.virt_install:
+        name: "{{ item.key }}"
+        state: present
+        memory: "{{ item.value.vm_memory }}"
+        vcpus: "{{ item.value.vm_vcpus }}"
+        location: "/var/lib/libvirt/images/{{ item.value.vm_install_iso }}"
+        disks:
+          - path: "/var/lib/libvirt/images/{{ item.key }}.qcow2"
+            size: "{{ item.value.vm_disk_size | default('30') }}"
+        osinfo:
+          name: "{{ item.value.vm_osinfo_name }}"
+        graphics:
+          type: vnc
+        networks:
+          - bridge: bridge0
+            model:
+              type: virtio  
+            mac:
+              address: "{{ item.value.vm_mac_address }}"
+        initrd_inject: "/var/lib/libvirt/boot/{{ item.value.vm_kickstart_file }}"
+        extra_args: "inst.ks=file://{{ item.value.vm_kickstart_file }}"           
+      loop: "{{ satellite_systems | dict2items }}"
+      loop_control:
+          label: "{{ item.key }}"
+
+    - name: Wait for kickstart to complete and shutdown vms
+      community.libvirt.virt:
+        name: "{{ item.key }}"
+        command: status
+      register: vm_status
+      until: vm_status.status == 'shutdown'
+      retries: 20
+      delay: 60
+      loop: "{{ satellite_systems | dict2items }}"
+      loop_control:
+          label: "{{ item.key }}"
+
+    - name: Start up the VMs
+      community.libvirt.virt:
+        name: "{{ item.key }}"
+        state: running
+      loop: "{{ satellite_systems | dict2items }}"
+      loop_control:
+          label: "{{ item.key }}"
