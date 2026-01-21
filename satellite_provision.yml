@@ -1,12 +1,12 @@
 --- 
 - name: Create vms for satellite
-  hosts: winter 
+  hosts: kvm_host 
   become: true 
   # satellite_systems defined in group_vars/homelab.yml
 
   tasks:
     - name: Ensure kickstart files exist where libvirt can grab them 
-      ansible.builtin.copy:
+      ansible.builtin.template:
         src: "ks/{{ item }}" 
         dest: "/var/lib/libvirt/boot/{{ item }}"
       loop: 
