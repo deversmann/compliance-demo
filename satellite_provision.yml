@@ -37,7 +37,7 @@
         extra_args: "inst.ks=file://{{ item.value.vm_kickstart_file }}"           
       loop: "{{ satellite_systems | dict2items }}"
       loop_control:
-          label: "{{ item.key }}"
+        label: "{{ item.key }}"
 
     - name: Wait for kickstart to complete and shutdown vms
       community.libvirt.virt:
@@ -49,7 +49,7 @@
       delay: 60
       loop: "{{ satellite_systems | dict2items }}"
       loop_control:
-          label: "{{ item.key }}"
+        label: "{{ item.key }}"
 
     - name: Start up the VMs
       community.libvirt.virt:
@@ -57,4 +57,4 @@
         state: running
       loop: "{{ satellite_systems | dict2items }}"
       loop_control:
-          label: "{{ item.key }}"
+        label: "{{ item.key }}"
