@@ -1,6 +1,9 @@
 .python-version
 .lock
 .vscode/
+.ansible
 extra_vars.yml
 manifest.zip
-context/*
+context/
+ansible-navigator.log 
+ansible.cfg
