@@ -1,0 +1,30 @@
+---
+- name: Validation
+  hosts: all
+  
+  vars:
+    images_dir: "/var/lib/libvirt/images/"
+    required_files:
+      localhost:
+        - manifest.zip
+      kvm_host: |
+        {{ satellite_systems | 
+        dict2items | 
+        map(attribute='value.vm_install_iso') | 
+        unique | 
+        map('regex_replace', '^', images_dir) }}
+ 
+  tasks:
+    - name: Check for the existence of required files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: file_stats
+      loop: "{{ required_files[inventory_hostname] }}"
+
+    - name: Results
+      ansible.builtin.debug:
+        msg: "{{ item.stat.exists | default(false) }}"
+      loop: "{{ file_stats.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      failed_when: not item.stat.exists
