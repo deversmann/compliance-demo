@@ -1,1 +1,0 @@
-kvm_host ansible_host=10.11.5.70 ansible_user=damien
