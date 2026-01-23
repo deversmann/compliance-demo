@@ -1,3 +1,4 @@
+.DS_Store
 .python-version
 .lock
 .vscode/
@@ -7,3 +8,4 @@ manifest.zip
 context/
 ansible-navigator.log 
 ansible.cfg
+inventory
