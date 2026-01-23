@@ -18,12 +18,15 @@
     - name: Check for the existence of required files
       ansible.builtin.stat:
         path: "{{ item }}"
+        get_checksum: false
+        get_mime: false
+        get_attributes: false
       register: file_stats
       loop: "{{ required_files[inventory_hostname] }}"
 
     - name: Results
       ansible.builtin.debug:
-        msg: "{{ item.stat.exists | default(false) }}"
+        msg: "{{ item.stat.exists | default(false) | ternary('exists', 'missing') }}"
       loop: "{{ file_stats.results }}"
       loop_control:
         label: "{{ item.item }}"
