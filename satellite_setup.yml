@@ -18,30 +18,87 @@
         scap_file: /usr/share/xml/scap/ssg/content/satellite/ssg-rhel8-ds.xml
       - title: Red Hat rhel9 default content
         scap_file: /usr/share/xml/scap/ssg/content/satellite/ssg-rhel9-ds.xml
+    satellite_server_url: "{{ satellite_url }}"
+    satellite_username: "admin"
+    satellite_password: "{{ admin_password }}"
+    satellite_organization: "{{ organization_name }}"
+    satellite_lifecycle_environments:
+      - name: "Dev"
+        prior: "Library"
+      - name: "Test"
+        prior: "Dev"
+      - name: "Prod"
+        prior: "Test"
+    satellite_content_views:
+          - RHEL8
   tasks:
 
-    - name: "Upload manifest"
-      redhat.satellite.subscription_manifest:
-        username: "admin"
-        password: "{{ admin_password }}"
-        server_url: "{{ satellite_url }}"
-        validate_certs: false
-        organization: "{{ organization_name }}"
-        state: present
-        manifest_path: "manifest.zip"
-      delegate_to: localhost 
+    # - name: "Upload manifest"
+    #   redhat.satellite.subscription_manifest:
+    #     username: "admin"
+    #     password: "{{ admin_password }}"
+    #     server_url: "{{ satellite_url }}"
+    #     validate_certs: false
+    #     organization: "{{ organization_name }}"
+    #     state: present
+    #     manifest_path: "manifest.zip"
+    #   delegate_to: localhost 
 
-    - name: Create SCAP content
-      redhat.satellite.scap_content:
-        title: "{{ item.title }}"
-        scap_file: "{{ item.scap_file }}"
-        organizations:
-          - "{{ organization_name }}"
-        locations:
-          - "{{ location }}"
-        server_url: "{{ satellite_url }}"
-        validate_certs: false
+    # - name: Create SCAP content
+    #   redhat.satellite.scap_content:
+    #     title: "{{ item.title }}"
+    #     scap_file: "{{ item.scap_file }}"
+    #     organizations:
+    #       - "{{ organization_name }}"
+    #     locations:
+    #       - "{{ location }}"
+    #     server_url: "{{ satellite_url }}"
+    #     validate_certs: false
+    #     username: "admin"
+    #     password: "{{ admin_password }}"
+    #     state: present
+    #   loop: "{{ default_scap_content }}"
+
+    # - name: Setup lifecycle environment 
+    #   ansible.builtin.include_role:
+    #     name: redhat.satellite.lifecycle_environments
+
+    # - name: "Create or update RHEL8 content view"
+    #   redhat.satellite.content_view:
+    #     username: "admin"
+    #     password: "{{ admin_password }}"
+    #     server_url: "{{ satellite_url }}"
+    #     name: "RHEL8"
+    #     # auto_publish: true 
+    #     organization: "{{ organization_name }}"
+
+    # - name: Publish content view 
+    #   ansible.builtin.include_role:
+    #     name: redhat.satellite.content_view_publish
+
+    # - name: "Create client activation key with multiple content views"
+    #   redhat.satellite.activation_key:
+    #     username: "admin"
+    #     password: "{{ admin_password }}"
+    #     server_url: "{{ satellite_url }}"
+    #     name: "Clients"
+    #     organization: "{{ organization_name }}"
+    #     lifecycle_environment: "Library"
+    #     content_view: 'RHEL8'
+
+    - name: "Enable RHEL 10 RPMs repositories with label"
+      redhat.satellite.repository_set:
         username: "admin"
         password: "{{ admin_password }}"
-        state: present
-      loop: "{{ default_scap_content }}"
+        server_url: "{{ satellite_url }}"
+        organization: "{{ organization_name }}"
+        label: "{{ item }}"
+        all_repositories: true 
+        state: enabled
+      loop:
+        - rhel-10-for-x86_64-baseos-rpms
+        - rhel-10-for-x86_64-appstream-rpms
+        - rhel-9-for-x86_64-baseos-rpms
+        - rhel-9-for-x86_64-appstream-rpms
+        - rhel-8-for-x86_64-baseos-rpms
+        - rhel-8-for-x86_64-appstream-rpms

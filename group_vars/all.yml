@@ -26,4 +26,11 @@ satellite_systems:
     vm_disk_size: 35
     vm_install_iso: "rhel-9.7-x86_64-dvd.iso"
     vm_kickstart_file: rhel9.7.ks
-    
+  server03: 
+    vm_memory: 8192
+    vm_vcpus: 2
+    vm_osinfo_name: rhel9.7
+    vm_mac_address: 52:54:00:ed:df:af
+    vm_disk_size: 35
+    vm_install_iso: "rhel-8.10-x86_64-dvd.iso"
+    vm_kickstart_file: rhel8.10.ks
