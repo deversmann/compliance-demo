@@ -1,7 +1,7 @@
 ---
 - name: Register and prep repos for Satellite install
   hosts: satellite
-  become: yes 
+  become: true 
   vars:
     rhc_state: present 
     rhc_auth:
@@ -20,7 +20,7 @@
 
 - name: Install Satellite 
   hosts: satellite
-  become: yes 
+  become: true 
 
   vars: 
     organization_name: "Jerry's Chop Shop"
@@ -42,7 +42,7 @@
 
 - name: Set Satellite firewall rule
   hosts: satellite
-  become: yes 
+  become: true 
   tasks:
     - name: permanently enable RH-Satellite-6 service 
       ansible.posix.firewalld:

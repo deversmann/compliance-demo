@@ -2,7 +2,7 @@
 - name: Create vms for satellite
   hosts: kvm_host 
   become: true 
-  # satellite_systems defined in group_vars/homelab.yml
+  # satellite_systems defined in group_vars/all.yml
 
   tasks:
     - name: Ensure kickstart files exist where libvirt can grab them 

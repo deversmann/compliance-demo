@@ -1,7 +1,7 @@
 --- 
 - name: Register with rhc 
   hosts: "{{ target | default('localhost') }}"
-  become: yes 
+  become: true 
 
   vars:
     rhc_state: present
