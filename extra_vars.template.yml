@@ -1,9 +1,11 @@
 --- 
-rh_username: <your rh username>
-rh_password: <your rh password>
+rh_username: "<your rh username>"
+rh_password: "<your rh password>"
+pool_id_rhel: "<pool id containing at least 5 RHEL entitlements>"
+pool_id_sat_infra: "<pool id containing at least 1 sattelite infrastructure entitlement>"
 
-rootpw_encrypted: <your encrypted root password https://access.redhat.com/solutions/221403
+rootpw_encrypted: "<your encrypted root password>" # see https://access.redhat.com/solutions/221403
 authorized_key: "<your ssh public key>"
 
-admin_email: <your email address>
-sat_admin_password: <your initial admin password> 
+sat_sat_admin_email: "<your email address>"
+sat_admin_password: "<your initial admin password>" 
