@@ -1,51 +1,33 @@
 --- 
-# - name: Register with satellite  
-#   hosts: sat_clients # "{{ target | default('localhost') }}"
-#   become: yes 
-
-#   vars:
-#     rhc_state: present
-#     rhc_server:
-#       hostname: sat01.aj.peripatetic.us
-#       prefix: /rhsm
-#       insecure: true
-#     rhc_auth:
-#       activation_keys:
-#         keys:  
-#           - Clients
-#     rhc_organization: "Jerry_s_Chop_Shop"
-#     rhc_baseurl: "https://sat01.aj.peripatetic.us/pulp/content"
-#     rhc_insights:
-#       state: present
-#       autoupdate: false
-#       remediation: false
-
-#   roles:
-#     - redhat.rhel_system_roles.rhc
-
-- name: Register with insights
+- name: Register with satellite  
   hosts: sat_clients # "{{ target | default('localhost') }}"
-  become: yes 
+  become: true 
 
   vars:
-    rhc_state: reconnect 
+    # role vars
+    rhc_state: present
     rhc_server:
-      hostname: console.redhat.com
+      hostname: "{{ sat_hostname }}"
       prefix: /rhsm
       insecure: true
-    # rhc_auth:
-    #   activation_keys:
-    #     keys:  
-    #       - homelab
-    rhc_organization: "12762124"
     rhc_auth:
-      login:
-        username: "{{ rh_username }}"
-        password: "{{ rh_password }}"
+      activation_keys:
+        keys:  
+          - "RHEL{{ ansible_distribution_major_version }}Clients"
+    rhc_organization: "{{ sat_org_name }}"
+    rhc_baseurl: "https://{{ sat_hostname }}/pulp/content"
     rhc_insights:
       state: present
-      autoupdate: false
-      remediation: absent
-      ansible_host: "{{ inventory_hostname }}"
+      autoupdate: true
+      remediation: present
+
   roles:
     - redhat.rhel_system_roles.rhc
+
+  tasks:
+    - name: Trigger immediate upload of Lightspeed (Insights) inventory data
+      ansible.builtin.command:
+        cmd: "foreman-rake rh_cloud_inventory:report:generate_upload organization_id=1"
+      register: output
+      failed_when: "output.rc != 0 or 'Generated and uploaded inventory report' not in output.stdout"
+      changed_when: "'Generated and uploaded inventory report' in output.stdout"
