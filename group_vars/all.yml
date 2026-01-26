@@ -1,11 +1,16 @@
 --- 
 ansible_user: sysadmin
 
+sat_hostname: "satellite.eversmann.xyz"
+sat_org_name: "Jerrys Chop Shop"
+sat_location: "Homelab"
+sat_admin_username: "admin"
+
 satellite_systems:
   satellite: 
     vm_memory: 33554
     vm_vcpus: 4
-    vm_osinfo_name: rhel9.7
+    vm_osinfo_name: rhel9-unknown
     vm_mac_address: 52:54:00:da:2d:88
     vm_disk_size: 450
     vm_install_iso: "rhel-9.7-x86_64-dvd.iso"
@@ -13,7 +18,7 @@ satellite_systems:
   server01: 
     vm_memory: 8192
     vm_vcpus: 2
-    vm_osinfo_name: rhel10.1
+    vm_osinfo_name: rhel10-unknown
     vm_mac_address: 52:54:00:3d:d0:56
     vm_disk_size: 50
     vm_install_iso: "rhel-10.1-x86_64-dvd.iso"
@@ -21,7 +26,7 @@ satellite_systems:
   server02: 
     vm_memory: 8192
     vm_vcpus: 2
-    vm_osinfo_name: rhel9.7
+    vm_osinfo_name: rhel9-unknown
     vm_mac_address: 52:54:00:17:51:2f
     vm_disk_size: 35
     vm_install_iso: "rhel-9.7-x86_64-dvd.iso"
@@ -29,7 +34,7 @@ satellite_systems:
   server03: 
     vm_memory: 8192
     vm_vcpus: 2
-    vm_osinfo_name: rhel9.7
+    vm_osinfo_name: rhel8-unknown
     vm_mac_address: 52:54:00:ed:df:af
     vm_disk_size: 35
     vm_install_iso: "rhel-8.10-x86_64-dvd.iso"
