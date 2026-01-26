@@ -7,8 +7,8 @@
 
 - name: Shutdown and remove existing virtual machines 
   hosts: kvm_host
-  gather_facts: False
-  become: True 
+  gather_facts: false
+  become: true 
 
   tasks: 
     - name: Stop all node VMs
@@ -17,7 +17,7 @@
         state: shutdown
       loop: "{{ satellite_systems | dict2items }}"
       loop_control:
-          label: "{{ item.key }}"
+        label: "{{ item.key }}"
       ignore_errors: true
 
     - name: Pause for vms to shutdown 
@@ -28,12 +28,12 @@
       community.libvirt.virt:
         command: undefine
         name: "{{ item.key }}"
-        #force: true
+        # force: true
       loop: "{{ satellite_systems | dict2items }}"
       loop_control:
-          label: "{{ item.key }}"
+        label: "{{ item.key }}"
       ignore_errors: true 
 
     - name: Pause for vms to undefine 
       ansible.builtin.pause:
-        seconds: 15 
+        seconds: 15
