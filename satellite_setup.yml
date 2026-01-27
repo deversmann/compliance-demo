@@ -111,17 +111,17 @@
           - releasever: "{{ item.releasever }}"
       loop:
         - label: rhel-10-for-x86_64-baseos-rpms
-          releasever: "10.1"
+          releasever: "10"
         - label: rhel-10-for-x86_64-appstream-rpms
-          releasever: "10.1"
+          releasever: "10"
         - label: rhel-9-for-x86_64-baseos-rpms
-          releasever: "9.7"
+          releasever: "9"
         - label: rhel-9-for-x86_64-appstream-rpms
-          releasever: "9.7"
+          releasever: "9"
         - label: rhel-8-for-x86_64-baseos-rpms
-          releasever: "8.10"
+          releasever: "8"
         - label: rhel-8-for-x86_64-appstream-rpms
-          releasever: "8.10"
+          releasever: "8"
 
     - name: List repositories
       redhat.satellite.repository_info:
@@ -167,9 +167,24 @@
         - 9
         - 10
 
-    - name: Publish content views 
-      ansible.builtin.include_role:
-        name: redhat.satellite.content_view_publish
+    # - name: Publish content views 
+    #   ansible.builtin.include_role:
+    #     name: redhat.satellite.content_view_publish
+
+    - name: "Publish a content view and promote that version to Library & Dev, not idempotent"
+      redhat.satellite.content_view_version:
+        username: "{{ sat_admin_username }}"
+        password: "{{ sat_admin_password }}"
+        server_url: "{{ satellite_server_url }}"
+        content_view: "RHEL{{ item }}"
+        organization: "{{ sat_org_name }}"
+        lifecycle_environments:
+          - Library
+          - Dev
+      loop:
+        - 8
+        - 9
+        - 10
 
     - name: "Create client activation keys"
       redhat.satellite.activation_key:
@@ -178,6 +193,6 @@
         server_url: "{{ satellite_server_url }}"
         name: "{{ item }}Clients"
         organization: "{{ sat_org_name }}"
-        lifecycle_environment: "Library"
+        lifecycle_environment: "Dev"
         content_view: "{{ item }}"
       loop: "{{ satellite_content_views }}"
