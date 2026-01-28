@@ -114,13 +114,19 @@
           releasever: "10"
         - label: rhel-10-for-x86_64-appstream-rpms
           releasever: "10"
+        - label: codeready-builder-for-rhel-10-x86_64-rpms 
+          releasever: "10"
         - label: rhel-9-for-x86_64-baseos-rpms
           releasever: "9"
         - label: rhel-9-for-x86_64-appstream-rpms
           releasever: "9"
+        - label: codeready-builder-for-rhel-9-x86_64-rpms 
+          releasever: "9"
         - label: rhel-8-for-x86_64-baseos-rpms
           releasever: "8"
         - label: rhel-8-for-x86_64-appstream-rpms
+          releasever: "8"
+        - label: codeready-builder-for-rhel-8-x86_64-rpms 
           releasever: "8"
 
     - name: List repositories
@@ -144,6 +150,18 @@
       loop: "{{ repo_info.repositories }}"
       loop_control:
         label: "{{ item.name }}"
+      async: 4200 
+      poll: 0 
+      register: sync_status 
+
+    - name: Wait for repositories to finish syncing 
+      ansible.builtin.async_status:
+        jid: "{{ item.ansible_job_id }}"
+      register: job_result 
+      until: job_result is finished 
+      retries: 120
+      delay: 60 
+      loop: "{{ sync_status.results }}"
 
     - name: Make templated list of repositories
       ansible.builtin.set_fact:
