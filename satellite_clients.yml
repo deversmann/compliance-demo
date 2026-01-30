@@ -31,7 +31,3 @@
       register: output
       failed_when: "'successfully configured' not in output.stdout"
       changed_when: output.rc == 0
-
-    - name: debug
-      ansible.builtin.debug:
-        msg: "{{ output }}"
