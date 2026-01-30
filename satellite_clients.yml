@@ -1,0 +1,33 @@
+--- 
+- name: Register with satellite  
+  hosts: sat_clients
+  become: true 
+  serial: 1 
+
+  vars:
+    satellite_server_url: "https://{{ sat_hostname }}"
+
+  tasks:
+    - name: "Generate registration command"
+      redhat.satellite.registration_command:
+        organization: "{{ sat_org_name }}"
+        activation_keys: 
+          - "RHEL{{ ansible_distribution_major_version }}Clients"
+        username: "admin"
+        password: "{{ sat_admin_password }}"
+        server_url: "{{ satellite_server_url }}"
+        lifecycle_environment: "Dev"
+        setup_insights: true 
+        insecure: true 
+        validate_certs: false 
+        force: true 
+      register: command
+      delegate_to: satellite
+      changed_when: false
+
+    - name: "Perform registration"  # not idempotent, shell necessary due to generated command
+      ansible.builtin.shell:        # noqa: command-instead-of-shell
+        cmd: "{{ command.registration_command }}"
+      register: output
+      failed_when: "'successfully configured' not in output.stdout"
+      changed_when: output.rc == 0

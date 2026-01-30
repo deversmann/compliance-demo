@@ -1,8 +1,9 @@
 ---
 - name: Register and prep repos for Satellite install
   hosts: satellite
-  become: yes 
+  become: true 
   vars:
+    # role vars
     rhc_state: present 
     rhc_auth:
       login:
@@ -20,14 +21,9 @@
 
 - name: Install Satellite 
   hosts: satellite
-  become: yes 
+  become: true 
 
-  vars: 
-    organization_name: "Jerry's Chop Shop"
-    admin_password: "{{ sat_admin_password }}"
-    location: "homelab"
   tasks:
-
     - name: Run Satellite installer 
       ansible.builtin.include_role:
         name: redhat.satellite_operations.installer
@@ -35,14 +31,14 @@
         satellite_installer_scenario: satellite
         satellite_installer_package: satellite-installer
         satellite_installer_options:
-          - '--foreman-initial-organization "{{ organization_name }}"'
-          - '--foreman-initial-admin-username admin'
-          - '--foreman-initial-admin-password {{ admin_password }}'
-          - '--foreman-initial-location "{{ location }}"'
+          - '--foreman-initial-organization "{{ sat_org_name }}"'
+          - '--foreman-initial-admin-username {{ sat_admin_username }}'
+          - '--foreman-initial-admin-password {{ sat_admin_password }}'
+          - '--foreman-initial-location "{{ sat_location }}"'
 
 - name: Set Satellite firewall rule
   hosts: satellite
-  become: yes 
+  become: true 
   tasks:
     - name: permanently enable RH-Satellite-6 service 
       ansible.posix.firewalld:

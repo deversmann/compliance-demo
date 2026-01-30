@@ -2,14 +2,18 @@
 - name: Create vms for satellite
   hosts: kvm_host 
   become: true 
-  # satellite_systems defined in group_vars/homelab.yml
+  # satellite_systems defined in group_vars/all.yml
 
   tasks:
     - name: Ensure kickstart files exist where libvirt can grab them 
       ansible.builtin.template:
         src: "ks/{{ item }}" 
         dest: "/var/lib/libvirt/boot/{{ item }}"
+        owner: qemu 
+        group: qemu 
+        mode: "0600"
       loop: 
+        - "rhel8.10.ks"
         - "rhel9.7.ks"
         - "rhel10.1.ks"
 

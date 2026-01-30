@@ -1,12 +1,9 @@
+---
 - name: Setup Satellite for demo
   hosts: satellite
-  become: yes 
+  become: true 
 
   vars: 
-    organization_name: "Jerry's Chop Shop"
-    admin_password: "{{ sat_admin_password }}"
-    location: "homelab"
-    satellite_url: https://sat01.aj.peripatetic.us 
     default_scap_content:
       - title: Red Hat rhel10 default content
         scap_file: /usr/share/xml/scap/ssg/content/satellite/ssg-rhel10-ds.xml
@@ -18,30 +15,198 @@
         scap_file: /usr/share/xml/scap/ssg/content/satellite/ssg-rhel8-ds.xml
       - title: Red Hat rhel9 default content
         scap_file: /usr/share/xml/scap/ssg/content/satellite/ssg-rhel9-ds.xml
-  tasks:
 
-    - name: "Upload manifest"
-      redhat.satellite.subscription_manifest:
-        username: "admin"
-        password: "{{ admin_password }}"
-        server_url: "{{ satellite_url }}"
+    # role vars
+    satellite_server_url: "https://{{ sat_hostname }}"
+    satellite_username: "{{ sat_admin_username }}"
+    satellite_password: "{{ sat_admin_password }}"
+    satellite_organization: "{{ sat_org_name }}"
+    satellite_lifecycle_environments:
+      - name: "Dev"
+        prior: "Library"
+      - name: "Test"
+        prior: "Dev"
+      - name: "Prod"
+        prior: "Test"
+    satellite_content_views:
+      - RHEL8
+      - RHEL9
+      - RHEL10
+      
+  tasks:
+    - name: "Create manifest"
+      redhat.satellite.redhat_manifest:
+        name: "{{ sat_hostname }}"
+        username: "{{ rh_username }}"
+        password: "{{ rh_password }}"
+        content_access_mode: "org_environment"
         validate_certs: false
-        organization: "{{ organization_name }}"
+      register: manifest_id
+
+    - name: "Add subs 1"
+      redhat.satellite.redhat_manifest:
+        uuid: "{{ manifest_id.uuid }}"
+        username: "{{ rh_username }}"
+        password: "{{ rh_password }}"
+        pool_id: "{{ pool_id_rhel }}"
+        quantity: 5
+        validate_certs: false
+
+    - name: "Add subs 2"
+      redhat.satellite.redhat_manifest:
+        uuid: "{{ manifest_id.uuid }}"
+        username: "{{ rh_username }}"
+        password: "{{ rh_password }}"
+        pool_id: "{{ pool_id_sat_infra }}"
+        quantity: 1
+        validate_certs: false
+
+    - name: "Download manifest"
+      redhat.satellite.redhat_manifest:
+        uuid: "{{ manifest_id.uuid }}"
+        username: "{{ rh_username }}"
+        password: "{{ rh_password }}"
+        path: "/tmp/manifest.zip"
+        validate_certs: false
+
+    - name: "Load manifest into Satellite"
+      redhat.satellite.subscription_manifest:
+        username: "{{ sat_admin_username }}"
+        password: "{{ sat_admin_password }}"
+        server_url: "{{ satellite_server_url }}"
+        validate_certs: false
+        organization: "{{ sat_org_name }}"
         state: present
-        manifest_path: "manifest.zip"
-      delegate_to: localhost 
+        manifest_path: "/tmp/manifest.zip"
 
     - name: Create SCAP content
       redhat.satellite.scap_content:
         title: "{{ item.title }}"
         scap_file: "{{ item.scap_file }}"
         organizations:
-          - "{{ organization_name }}"
+          - "{{ sat_org_name }}"
         locations:
-          - "{{ location }}"
-        server_url: "{{ satellite_url }}"
+          - "{{ sat_location }}"
+        server_url: "{{ satellite_server_url }}"
         validate_certs: false
-        username: "admin"
-        password: "{{ admin_password }}"
+        username: "{{ sat_admin_username }}"
+        password: "{{ sat_admin_password }}"
         state: present
       loop: "{{ default_scap_content }}"
+
+    - name: Setup lifecycle environments 
+      ansible.builtin.include_role:
+        name: redhat.satellite.lifecycle_environments
+
+    - name: "Enable RHEL repositories with label and releasever"
+      redhat.satellite.repository_set:
+        username: "{{ sat_admin_username }}"
+        password: "{{ sat_admin_password }}"
+        server_url: "{{ satellite_server_url }}"
+        organization: "{{ sat_org_name }}"
+        label: "{{ item.label }}"
+        state: enabled
+        repositories:
+          - releasever: "{{ item.releasever }}"
+      loop:
+        - label: rhel-10-for-x86_64-baseos-rpms
+          releasever: "10"
+        - label: rhel-10-for-x86_64-appstream-rpms
+          releasever: "10"
+        - label: codeready-builder-for-rhel-10-x86_64-rpms 
+          releasever: "10"
+        - label: rhel-9-for-x86_64-baseos-rpms
+          releasever: "9"
+        - label: rhel-9-for-x86_64-appstream-rpms
+          releasever: "9"
+        - label: codeready-builder-for-rhel-9-x86_64-rpms 
+          releasever: "9"
+        - label: rhel-8-for-x86_64-baseos-rpms
+          releasever: "8"
+        - label: rhel-8-for-x86_64-appstream-rpms
+          releasever: "8"
+        - label: codeready-builder-for-rhel-8-x86_64-rpms 
+          releasever: "8"
+
+    - name: List repositories
+      redhat.satellite.repository_info:
+        product: "Red Hat Enterprise Linux for x86_64"
+        username: "{{ sat_admin_username }}"
+        password: "{{ sat_admin_password }}"
+        server_url: "{{ satellite_server_url }}"
+        organization: "{{ sat_org_name }}"
+      register: repo_info
+
+    - name: Sync repositories
+      redhat.satellite.repository_sync:
+        username: "{{ sat_admin_username }}"
+        password: "{{ sat_admin_password }}"
+        server_url: "{{ satellite_server_url }}"
+        repository: "{{ item.name }}"
+        product: "Red Hat Enterprise Linux for x86_64"
+        organization: "{{ sat_org_name }}"
+      loop: "{{ repo_info.repositories }}"
+      loop_control:
+        label: "{{ item.name }}"
+      async: 4200 
+      poll: 0 
+      register: sync_status 
+
+    - name: Wait for repositories to finish syncing 
+      ansible.builtin.async_status:
+        jid: "{{ item.ansible_job_id }}"
+      register: job_result 
+      until: job_result is finished 
+      retries: 120
+      delay: 60 
+      loop: "{{ sync_status.results }}"
+
+    - name: Compose simplified list of repositories
+      ansible.builtin.set_fact:
+        repo_list: "{{ repo_list | default([]) + [{'name': item.name, 'product': item.product.name, 'major': item.major}] }}"
+        # Above creates a list of dicts with name, product, and major version
+      loop: "{{ repo_info.repositories }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Load repositories into content views
+      redhat.satellite.content_view:
+        username: "{{ sat_admin_username }}"
+        password: "{{ sat_admin_password }}"
+        server_url: "{{ satellite_server_url }}"
+        name: "RHEL{{ item }}"
+        organization: "{{ sat_org_name }}"
+        repositories: |
+          "{{ repo_list | selectattr('major', 'eq', item) | community.general.keep_keys(target=['name', 'product']) | list }}"
+        # Above selects repos matching major version and then remove 'major' key
+        state: present
+      loop:
+        - 8
+        - 9
+        - 10
+
+    - name: "Publish a content view and promote that version to Library & Dev, not idempotent"
+      redhat.satellite.content_view_version:
+        username: "{{ sat_admin_username }}"
+        password: "{{ sat_admin_password }}"
+        server_url: "{{ satellite_server_url }}"
+        content_view: "RHEL{{ item }}"
+        organization: "{{ sat_org_name }}"
+        lifecycle_environments:
+          - Library
+          - Dev
+      loop:
+        - 8
+        - 9
+        - 10
+
+    - name: "Create client activation keys"
+      redhat.satellite.activation_key:
+        username: "{{ sat_admin_username }}"
+        password: "{{ sat_admin_password }}"
+        server_url: "{{ satellite_server_url }}"
+        name: "{{ item }}Clients"
+        organization: "{{ sat_org_name }}"
+        lifecycle_environment: "Dev"
+        content_view: "{{ item }}"
+      loop: "{{ satellite_content_views }}"
