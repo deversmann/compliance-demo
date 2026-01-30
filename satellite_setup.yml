@@ -105,7 +105,6 @@
         server_url: "{{ satellite_server_url }}"
         organization: "{{ sat_org_name }}"
         label: "{{ item.label }}"
-        # all_repositories: true 
         state: enabled
         repositories:
           - releasever: "{{ item.releasever }}"
@@ -138,7 +137,6 @@
         organization: "{{ sat_org_name }}"
       register: repo_info
 
-    # *** takes 30-45 mins but is necessary for the clients' rhc run ***
     - name: Sync repositories
       redhat.satellite.repository_sync:
         username: "{{ sat_admin_username }}"
@@ -163,14 +161,13 @@
       delay: 60 
       loop: "{{ sync_status.results }}"
 
-    - name: Make templated list of repositories
+    - name: Compose simplified list of repositories
       ansible.builtin.set_fact:
-        templated_list: |
-          [
-          {% for item in repo_info.repositories %}
-            { "name":"{{ item.name }}","product":"{{ item.product.name }}","major":{{ item.major }} }{% if not loop.last %},{% endif %}
-          {% endfor %}
-          ]
+        repo_list: "{{ repo_list | default([]) + [{'name': item.name, 'product': item.product.name, 'major': item.major}] }}"
+        # Above creates a list of dicts with name, product, and major version
+      loop: "{{ repo_info.repositories }}"
+      loop_control:
+        label: "{{ item.name }}"
 
     - name: Load repositories into content views
       redhat.satellite.content_view:
@@ -179,15 +176,14 @@
         server_url: "{{ satellite_server_url }}"
         name: "RHEL{{ item }}"
         organization: "{{ sat_org_name }}"
-        repositories: "{{ templated_list | selectattr('major', 'eq', item) | map('dict2items') | map('rejectattr', 'key', 'eq', 'major') | map('items2dict') }}"
+        repositories: |
+          "{{ repo_list | selectattr('major', 'eq', item) | community.general.keep_keys(target=['name', 'product']) | list }}"
+        # Above selects repos matching major version and then remove 'major' key
+        state: present
       loop:
         - 8
         - 9
         - 10
-
-    # - name: Publish content views 
-    #   ansible.builtin.include_role:
-    #     name: redhat.satellite.content_view_publish
 
     - name: "Publish a content view and promote that version to Library & Dev, not idempotent"
       redhat.satellite.content_view_version:

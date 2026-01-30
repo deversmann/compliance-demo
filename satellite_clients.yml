@@ -1,30 +1,11 @@
 --- 
 - name: Register with satellite  
-  hosts: sat_clients # "{{ target | default('localhost') }}"
+  hosts: sat_clients
   become: true 
   serial: 1 
 
   vars:
     satellite_server_url: "https://{{ sat_hostname }}"
-    # role vars
-    rhc_state: present
-    rhc_server:
-      hostname: "{{ sat_hostname }}"
-      prefix: /rhsm
-      insecure: true
-    rhc_auth:
-      activation_keys:
-        keys:  
-          - "RHEL{{ ansible_distribution_major_version }}Clients"
-    rhc_organization: "{{ sat_org_name }}"
-    rhc_baseurl: "https://{{ sat_hostname }}/pulp/content"
-    rhc_insights:
-      state: present
-      autoupdate: true
-      remediation: present
-
-  # roles:
-  #   - redhat.rhel_system_roles.rhc
 
   tasks:
     - name: "Generate registration command"
@@ -41,15 +22,12 @@
         validate_certs: false 
         force: true 
       register: command
-      delegate_to: localhost
+      delegate_to: satellite
+      changed_when: false
 
-    - name: "Perform registration"
-      ansible.builtin.shell:
+    - name: "Perform registration"  # not idempotent, shell necessary due to generated command
+      ansible.builtin.shell:        # noqa: command-instead-of-shell
         cmd: "{{ command.registration_command }}"
-
-    # - name: Trigger immediate upload of Lightspeed (Insights) inventory data
-    #   ansible.builtin.command:
-    #     cmd: "foreman-rake rh_cloud_inventory:report:generate_upload organization_id=1"
-    #   register: output
-    #   failed_when: "output.rc != 0 or 'Generated and uploaded inventory report' not in output.stdout"
-    #   changed_when: "'Generated and uploaded inventory report' in output.stdout"
+      register: output
+      failed_when: "'successfully configured' not in output.stdout"
+      changed_when: output.rc == 0
