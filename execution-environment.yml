@@ -1,47 +1,29 @@
 ---
 version: 3
-
 images:
   base_image:
-    name: registry.redhat.io/ansible-automation-platform-26/ee-minimal-rhel9@sha256:95605453fe1f6358d8e3e35f354cf1c11da6a992cb171364a1675df8624f0cb0
+    name: registry.fedoraproject.org/fedora:42 # registry.redhat.io/ansible-automation-platform-26/ee-minimal-rhel9:1.0 # registry.redhat.io/ubi9/ubi:latest
+    options:
+      pull_policy: missing
+      tls_verify: false
 
 dependencies:
-  python_interpreter:
-      package_system: "python311"
-      python_path: "/usr/bin/python3.11"
-  ansible_core:
-    package_pip: ansible-core==2.16.15
-  ansible_runner:
-    package_pip: ansible-runner==2.3.6
   galaxy:
     collections:
       - { name: community.general, version: 10.3.0 }
-      - { name: community.postgresql, version: 3.10.2 }
-      - { name: kubernetes.core, version: 5.1.0 }
       - { name: ansible.posix, version: 1.6.2 }
       - { name: redhat.insights, version: 1.3.0 }
       - { name: redhat.rhel_system_roles, version: 1.95.7 }
       - { name: redhat.satellite_operations, version: 3.0.0 }
       - { name: redhat.satellite, version: 5.3.0 }
-      - { name: community.crypto, version: 2.26.0 }
-      - { name: hpe.ilo, version: 1.0.41 }
       - { name: containers.podman, version: 1.16.3 }
       - { name: community.docker, version: 5.0.3 }
-      - { name: community.aws }
-      - { name: amazon.aws }
-      - { name: infra.leapp, version: 1.6.1 }
-      - { name: infra.osbuild, version: 2.3.0 }
-      - { name: community.hashi_vault, version: 7.1.0 }
-      - { name: freeipa.ansible_freeipa, version: 1.15.1 }
-      - { name: redhat.rhel_idm, version: 1.15.1 }
-      - { name: redhat.rhbk, version: 3.0.1 }
       - { name: redhat.runtimes_common, version: 1.2.2 }
-      - { name: hashicorp.vault, version: 1.1.0 }
       - name: community.libvirt
         type: git
         version: "main"
         source: https://github.com/ansible-collections/community.libvirt
-  python: 
+  python:
     - pkgconfig
     - passlib
     - jmespath
@@ -52,28 +34,31 @@ dependencies:
     - lxml
     - libvirt-python
   system:
-    - unzip [platform:rhel-9]
-    - pkg-config 
-    - gcc
+    - unzip [platform:redhat]
+    - git [platform:redhat]
+    - pkg-config [platform:redhat]
+    - gcc [platform:redhat]
+    - libvirt [platform:redhat]
+    - libvirt-devel [platform:redhat]
+    - python3.11-devel [platform:redhat]
 
-  exclude:
-    system:
-      - openshift-clients
+  python_interpreter:
+      package_system: "python311"
+      python_path: "/usr/bin/python3.11"
+  ansible_core:
+    package_pip: ansible-core==2.16.15
+  ansible_runner:
+    package_pip: ansible-runner==2.3.6
 
 additional_build_files:
   - src: ansible.cfg
     dest: configs
 
 additional_build_steps:
-  prepend_base:
-    - ARG TARGETARCH
-    - RUN echo $TARGETARCH
-    - RUN if [ "$TARGETARCH" = "arm64" ]; then microdnf -y --enablerepo=codeready-builder-for-rhel-9-aarch64-rpms install libvirt-devel; else microdnf -y --enablerepo=codeready-builder-for-rhel-9-x86_64-rpms install libvirt-devel; fi
-      
   prepend_galaxy:
     # Copy ansible.cfg from build directory to EE
     - COPY _build/configs/ansible.cfg /etc/ansible/ansible.cfg
-
+    - RUN $PKGMGR -y install git
 
 options:
   package_manager_path: /usr/bin/microdnf
