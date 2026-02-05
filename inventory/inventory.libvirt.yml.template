@@ -1,0 +1,29 @@
+---
+plugin: community.libvirt.libvirt 
+uri: 'qemu+ssh://sysadmin@<<** your kvm host here **>>/system'
+
+networks:
+  - name: default
+
+include_status: [1] # only running vms 
+
+compose:
+  ansible_connection: "'ssh'"
+  ansible_user: "'sysadmin'"
+  ansible_host: "interface_addresses.enp1s0.addrs[0].addr"
+
+groups:
+  sat_systems: >
+      interface_addresses.enp1s0.hwaddr in [
+        '52:54:00:da:2d:88',
+        '52:54:00:3d:d0:56',
+        '52:54:00:17:51:2f',
+        '52:54:00:ed:df:af'
+      ]
+  
+  sat_clients: >
+      interface_addresses.enp1s0.hwaddr in [
+        '52:54:00:3d:d0:56',
+        '52:54:00:17:51:2f',
+        '52:54:00:ed:df:af'
+      ]
