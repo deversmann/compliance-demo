@@ -3,7 +3,7 @@ ansible-navigator:
   execution-environment:
     container-engine: podman
     enabled: true
-    image: quay.io/jerrycorum/compliance_ee:1.0
+    image: quay.io/deversmarht/compliance_ee:2.0
     pull:
       policy: missing
   playbook-artifact:
