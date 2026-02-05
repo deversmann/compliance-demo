@@ -1,0 +1,20 @@
+---
+# site.yml
+
+# All playbooks required for provisioning and installing or deprovisioning the
+# compliance as code demo. Every playbook will be called from this wrapper, 
+# but labels within each playbook will make sure the desired process occurs.
+# Be sure to appropriately configure the deployment in the (!#! TODO) file.
+
+- name: Teardown the demo (De-register and de-provision)
+  ansible.builtin.import_playbook: ./satellite_teardown.yml
+- name: Validate that all requirements are in place
+  ansible.builtin.import_playbook: ./validation.yml
+- name: Provision all VMs needed for the demo  
+  ansible.builtin.import_playbook: ./satellite_provision.yml
+- name: Install Satellite on the appropriate VM
+  ansible.builtin.import_playbook: ./satellite_install.yml
+- name: Configure Satellite for the demo
+  ansible.builtin.import_playbook: ./satellite_setup.yml
+- name: Configure the client VMs for the demo
+  ansible.builtin.import_playbook: ./satellite_clients.yml

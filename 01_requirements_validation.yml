@@ -6,7 +6,6 @@
     images_dir: "/var/lib/libvirt/images/"
     required_files:
       localhost:
-        - manifest.zip
       kvm_host: |
         {{ satellite_systems | 
         dict2items | 
