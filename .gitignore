@@ -8,4 +8,5 @@ manifest.zip
 context/
 ansible-navigator.log 
 ansible.cfg
-inventory
+inventory/inventory 
+inventory/inventory.libvirt.yml 
