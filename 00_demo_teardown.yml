@@ -1,7 +1,9 @@
 ---
-- name: Ensure system is unregisterd with RHC
+- name: Ensure system is unregistered with RHC
   hosts: sat_systems
+  tags: [teardown, never]
   become: true 
+
   vars:
     target: sat_systems
     rhc_auth:
@@ -11,11 +13,14 @@
     rhc_state: absent 
     rhc_insights:
       state: absent
+
   roles:
     - redhat.rhel_system_roles.rhc
 
+
 - name: Shutdown and remove existing virtual machines 
   hosts: kvm_host
+  tags: [teardown, never]
   gather_facts: false
   become: true 
 

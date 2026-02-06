@@ -1,6 +1,7 @@
 --- 
 - name: Create vms for satellite
   hosts: kvm_host 
+  tags: [provision]
   become: true 
   # satellite_systems defined in group_vars/all.yml
 
@@ -62,3 +63,7 @@
       loop: "{{ satellite_systems | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
+
+    - name: Refresh dynamic inventory
+      ansible.builtin.meta:
+        refresh_inventory

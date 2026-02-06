@@ -1,29 +1,26 @@
 ---
-- name: Register and prep repos for Satellite install
+- name: Satellite installation
   hosts: satellite
-  become: true 
-  vars:
-    # role vars
-    rhc_state: present 
-    rhc_auth:
-      login:
-        username: "{{ rh_username }}"
-        password: "{{ rh_password }}"
-    rhc_repositories:
-      - { name: "rhel-9-for-x86_64-baseos-rpms", state: enabled }
-      - { name: "rhel-9-for-x86_64-appstream-rpms", state: enabled }
-      - { name: "codeready-builder-for-rhel-9-x86_64-rpms", state: disabled }
-      - { name: "satellite-6.16-for-rhel-9-x86_64-rpms", state: enabled }
-      - { name: "satellite-maintenance-6.16-for-rhel-9-x86_64-rpms", state: enabled }
-
-  roles:
-    - redhat.rhel_system_roles.rhc
-
-- name: Install Satellite 
-  hosts: satellite
+  tags: [sat_install]
   become: true 
 
   tasks:
+    - name: Register and prep repos for Satellite install 
+      ansible.builtin.include_role:
+        name: redhat.rhel_system_roles.rhc
+      vars:
+        rhc_state: present 
+        rhc_auth:
+          login:
+            username: "{{ rh_username }}"
+            password: "{{ rh_password }}"
+        rhc_repositories:
+          - { name: "rhel-9-for-x86_64-baseos-rpms", state: enabled }
+          - { name: "rhel-9-for-x86_64-appstream-rpms", state: enabled }
+          - { name: "codeready-builder-for-rhel-9-x86_64-rpms", state: disabled }
+          - { name: "satellite-6.16-for-rhel-9-x86_64-rpms", state: enabled }
+          - { name: "satellite-maintenance-6.16-for-rhel-9-x86_64-rpms", state: enabled }
+
     - name: Run Satellite installer 
       ansible.builtin.include_role:
         name: redhat.satellite_operations.installer
@@ -36,10 +33,6 @@
           - '--foreman-initial-admin-password {{ sat_admin_password }}'
           - '--foreman-initial-location "{{ sat_location }}"'
 
-- name: Set Satellite firewall rule
-  hosts: satellite
-  become: true 
-  tasks:
     - name: permanently enable RH-Satellite-6 service 
       ansible.posix.firewalld:
         service: RH-Satellite-6
