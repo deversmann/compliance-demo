@@ -1,2 +1,2 @@
-kvm_host ansible_host=x.x.x.x ansible_user=sysadmin
-localhost ansible_connection=local
+# kvm_host ansible_host=x.x.x.x ansible_user=sysadmin
+# localhost ansible_connection=local

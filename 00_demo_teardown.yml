@@ -1,12 +1,26 @@
 ---
-- name: Ensure system is unregisterd with RHC
-  ansible.builtin.import_playbook: rhsm.yml
+- name: Ensure system is unregistered with RHC
+  hosts: sat_systems
+  tags: [teardown, never]
+  become: true 
+
   vars:
     target: sat_systems
+    rhc_auth:
+      login:
+        username: "{{ rh_username }}"
+        password: "{{ rh_password }}"
     rhc_state: absent 
+    rhc_insights:
+      state: absent
+
+  roles:
+    - redhat.rhel_system_roles.rhc
+
 
 - name: Shutdown and remove existing virtual machines 
   hosts: kvm_host
+  tags: [teardown, never]
   gather_facts: false
   become: true 
 
@@ -18,7 +32,7 @@
       loop: "{{ satellite_systems | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
-      ignore_errors: true
+      failed_when: false # doesn't really matter, we are deleting them anyway
 
     - name: Pause for vms to shutdown 
       ansible.builtin.pause:
@@ -32,7 +46,7 @@
       loop: "{{ satellite_systems | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
-      ignore_errors: true 
+      failed_when: false 
 
     - name: Pause for vms to undefine 
       ansible.builtin.pause:

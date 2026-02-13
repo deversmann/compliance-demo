@@ -1,12 +1,17 @@
 ---
 - name: Validation
-  hosts: all
-  
+  hosts: kvm_host, localhost
+  tags: [validation]
+
   vars:
     images_dir: "/var/lib/libvirt/images/"
     required_files:
-      localhost:
-        - manifest.zip
+      localhost: |
+        {{ satellite_systems | 
+        dict2items | 
+        map(attribute='value.vm_kickstart_file') | 
+        unique | 
+        map('regex_replace', '^', "templates/ks/") }}
       kvm_host: |
         {{ satellite_systems | 
         dict2items | 

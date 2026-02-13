@@ -53,4 +53,4 @@ additional_build_steps:
 options:
   package_manager_path: /usr/bin/microdnf
   tags:
-      - quay.io/jerrycorum/compliance_ee:2.0
+      - quay.io/deversmarht/compliance_ee:2.0

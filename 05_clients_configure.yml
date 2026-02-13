@@ -1,6 +1,7 @@
 --- 
 - name: Register with satellite  
   hosts: sat_clients
+  tags: [clients_configure]
   become: true 
   serial: 1 
 
