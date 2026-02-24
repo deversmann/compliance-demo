@@ -27,3 +27,8 @@ groups:
         '52:54:00:17:51:2f',
         '52:54:00:ed:df:af'
       ]
+
+  aap_systems: >
+      interface_addresses.enp1s0.hwaddr in [
+        52:54:00:bf:ca:50
+      ]
