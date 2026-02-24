@@ -18,17 +18,19 @@ groups:
         '52:54:00:da:2d:88',
         '52:54:00:3d:d0:56',
         '52:54:00:17:51:2f',
-        '52:54:00:ed:df:af'
+        '52:54:00:ed:df:af',
+        '52:54:00:bf:ca:50'
       ]
   
   sat_clients: >
       interface_addresses.enp1s0.hwaddr in [
         '52:54:00:3d:d0:56',
         '52:54:00:17:51:2f',
-        '52:54:00:ed:df:af'
+        '52:54:00:ed:df:af',
+        '52:54:00:bf:ca:50'
       ]
 
   aap_systems: >
       interface_addresses.enp1s0.hwaddr in [
-        52:54:00:bf:ca:50
+        '52:54:00:bf:ca:50'
       ]
