@@ -172,15 +172,20 @@
       loop_control:
         label: "{{ item.name }}"
 
-    - name: Load repositories into content views
+    - name: Load repositories into content views # noqa: args[module] - skipping because of false positive on repositories field
       redhat.satellite.content_view:
         username: "{{ sat_admin_username }}"
         password: "{{ sat_admin_password }}"
         server_url: "{{ satellite_server_url }}"
         name: "RHEL{{ item }}"
         organization: "{{ sat_org_name }}"
-        repositories: |
-          "{{ repo_list | selectattr('major', 'eq', item) | community.general.keep_keys(target=['name', 'product']) | list }}"
+        repositories: >
+          {{ 
+            repo_list | 
+            selectattr('major', 'eq', item) | 
+            community.general.keep_keys(target=['name', 'product']) | 
+            list 
+          }} 
         # Above selects repos matching major version and then remove 'major' key
         state: present
       loop:
@@ -213,3 +218,52 @@
         lifecycle_environment: "Dev"
         content_view: "{{ item }}"
       loop: "{{ satellite_content_views }}"
+
+    - name: Refresh dynamic inventory
+      ansible.builtin.meta:
+        refresh_inventory
+
+    - name: Create foreman hammer auth file
+      ansible.builtin.blockinfile:
+        path: "~/.hammer/cli.modules.d/foreman.yml"
+        block: |
+          :foreman:
+           :username: {{ sat_admin_username }}
+           :password: {{ sat_admin_password }}
+
+    - name: Register profile ids
+      ansible.builtin.shell: |
+          set -o pipefail
+          hammer scap-content-profile list \ 
+          --search "title=\"PCI-DSS v4.0.1 Control Baseline for Red Hat Enterprise Linux {{ item }}\"" \ 
+          --fields id \ 
+          | awk '{printf "%s", $2}'
+      args:
+        executable: /bin/bash
+      loop:
+        - 8
+        - 9
+        - 10
+      register: profile
+      changed_when: false
+
+    - name: Create SCAP policies
+      ansible.builtin.shell: |  
+          hammer policy create \
+          --deploy-by "manual" \
+          --name "PCI_Compliance_{{ item.item }}" \ 
+          --description "OpenSCAP PCI Compliance Policy - RHEL {{ item.item }}" \ 
+          --scap-content "Red Hat rhel{{ item.item }} default content" \ 
+          --scap-content-profile-id {{ item.stdout }} \ 
+          --period "monthly" \ 
+          --day-of-month 1
+      args:
+        executable: /bin/bash
+      loop: "{{ profile.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      register: output
+      changed_when: '"Policy created" in output.stdout'
+      failed_when:
+        - output.rc != 0
+        - '"Name has already been taken" not in output.stderr'
