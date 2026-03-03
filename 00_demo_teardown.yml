@@ -51,3 +51,7 @@
     - name: Pause for vms to undefine 
       ansible.builtin.pause:
         seconds: 15
+ 
+    - name: Refresh dynamic inventory
+      ansible.builtin.meta:
+        refresh_inventory

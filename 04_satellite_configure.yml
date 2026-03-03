@@ -18,7 +18,7 @@
         scap_file: /usr/share/xml/scap/ssg/content/satellite/ssg-rhel9-ds.xml
 
     # role vars
-    satellite_server_url: "https://{{ sat_hostname }}"
+    satellite_server_url: "{{ sat_server_url }}"
     satellite_username: "{{ sat_admin_username }}"
     satellite_password: "{{ sat_admin_password }}"
     satellite_organization: "{{ sat_org_name }}"
@@ -74,26 +74,11 @@
       redhat.satellite.subscription_manifest:
         username: "{{ sat_admin_username }}"
         password: "{{ sat_admin_password }}"
-        server_url: "{{ satellite_server_url }}"
+        server_url: "{{ sat_server_url }}"
         validate_certs: false
         organization: "{{ sat_org_name }}"
         state: present
         manifest_path: "/tmp/manifest.zip"
-
-    - name: Create SCAP content
-      redhat.satellite.scap_content:
-        title: "{{ item.title }}"
-        scap_file: "{{ item.scap_file }}"
-        organizations:
-          - "{{ sat_org_name }}"
-        locations:
-          - "{{ sat_location }}"
-        server_url: "{{ satellite_server_url }}"
-        validate_certs: false
-        username: "{{ sat_admin_username }}"
-        password: "{{ sat_admin_password }}"
-        state: present
-      loop: "{{ default_scap_content }}"
 
     - name: Setup lifecycle environments 
       ansible.builtin.include_role:
@@ -103,7 +88,7 @@
       redhat.satellite.repository_set:
         username: "{{ sat_admin_username }}"
         password: "{{ sat_admin_password }}"
-        server_url: "{{ satellite_server_url }}"
+        server_url: "{{ sat_server_url }}"
         organization: "{{ sat_org_name }}"
         label: "{{ item.label }}"
         state: enabled
@@ -134,7 +119,7 @@
         product: "Red Hat Enterprise Linux for x86_64"
         username: "{{ sat_admin_username }}"
         password: "{{ sat_admin_password }}"
-        server_url: "{{ satellite_server_url }}"
+        server_url: "{{ sat_server_url }}"
         organization: "{{ sat_org_name }}"
       register: repo_info
 
@@ -142,7 +127,7 @@
       redhat.satellite.repository_sync:
         username: "{{ sat_admin_username }}"
         password: "{{ sat_admin_password }}"
-        server_url: "{{ satellite_server_url }}"
+        server_url: "{{ sat_server_url }}"
         repository: "{{ item.name }}"
         product: "Red Hat Enterprise Linux for x86_64"
         organization: "{{ sat_org_name }}"
@@ -176,7 +161,7 @@
       redhat.satellite.content_view:
         username: "{{ sat_admin_username }}"
         password: "{{ sat_admin_password }}"
-        server_url: "{{ satellite_server_url }}"
+        server_url: "{{ sat_server_url }}"
         name: "RHEL{{ item }}"
         organization: "{{ sat_org_name }}"
         repositories: >
@@ -197,7 +182,7 @@
       redhat.satellite.content_view_version:
         username: "{{ sat_admin_username }}"
         password: "{{ sat_admin_password }}"
-        server_url: "{{ satellite_server_url }}"
+        server_url: "{{ sat_server_url }}"
         content_view: "RHEL{{ item }}"
         organization: "{{ sat_org_name }}"
         lifecycle_environments:
@@ -212,7 +197,7 @@
       redhat.satellite.activation_key:
         username: "{{ sat_admin_username }}"
         password: "{{ sat_admin_password }}"
-        server_url: "{{ satellite_server_url }}"
+        server_url: "{{ sat_server_url }}"
         name: "{{ item }}Clients"
         organization: "{{ sat_org_name }}"
         lifecycle_environment: "Dev"
@@ -222,48 +207,3 @@
     - name: Refresh dynamic inventory
       ansible.builtin.meta:
         refresh_inventory
-
-    - name: Create foreman hammer auth file
-      ansible.builtin.blockinfile:
-        path: "~/.hammer/cli.modules.d/foreman.yml"
-        block: |
-          :foreman:
-           :username: {{ sat_admin_username }}
-           :password: {{ sat_admin_password }}
-
-    - name: Register profile ids
-      ansible.builtin.shell: |
-          set -o pipefail
-          hammer scap-content-profile list \ 
-          --search "title=\"PCI-DSS v4.0.1 Control Baseline for Red Hat Enterprise Linux {{ item }}\"" \ 
-          --fields id \ 
-          | awk '{printf "%s", $2}'
-      args:
-        executable: /bin/bash
-      loop:
-        - 8
-        - 9
-        - 10
-      register: profile
-      changed_when: false
-
-    - name: Create SCAP policies
-      ansible.builtin.shell: |  
-          hammer policy create \
-          --deploy-by "manual" \
-          --name "PCI_Compliance_{{ item.item }}" \ 
-          --description "OpenSCAP PCI Compliance Policy - RHEL {{ item.item }}" \ 
-          --scap-content "Red Hat rhel{{ item.item }} default content" \ 
-          --scap-content-profile-id {{ item.stdout }} \ 
-          --period "monthly" \ 
-          --day-of-month 1
-      args:
-        executable: /bin/bash
-      loop: "{{ profile.results }}"
-      loop_control:
-        label: "{{ item.item }}"
-      register: output
-      changed_when: '"Policy created" in output.stdout'
-      failed_when:
-        - output.rc != 0
-        - '"Name has already been taken" not in output.stderr'
