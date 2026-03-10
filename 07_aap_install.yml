@@ -1,0 +1,67 @@
+--- 
+- name: Install AAP all-in-one
+  hosts: aap_systems 
+  become: true 
+  
+  vars:
+    install_tarball: "ansible-automation-platform-containerized-setup-2.6-5.tar.gz"
+    extracted_name: "{{ install_tarball | regex_replace('\\.tar\\.gz$', '') }}"
+    aap_admin_password: "{{ sat_admin_password }}"
+
+  tasks: 
+    - name: Ensure hostname is set 
+      ansible.builtin.hostname:
+        name: "{{ aap_hostname }}"
+        use: systemd
+
+    - name: Ensure ansible-core and additional utilities are installed 
+      ansible.builtin.dnf:
+        name: 
+          - ansible-core 
+          - wget 
+          - git-core 
+          - rsync 
+          - vim 
+          - redhat-release # https://access.redhat.com/solutions/7137126
+        state: latest 
+
+    - name: Ensure installer exists on aap host 
+      ansible.builtin.unarchive:
+        src: "{{ install_tarball }}"
+        dest: /home/{{ ansible_user }}/
+      register: installer_dir 
+
+    - name: Copy installer inventory-growth template 
+      ansible.builtin.copy:
+        src: /home/{{ ansible_user }}/{{ extracted_name }}/inventory-growth
+        dest: /home/{{ ansible_user }}/{{ extracted_name }}/install-inventory 
+        remote_src: true 
+        mode: '0644'
+
+    - name: Set default variables in install-inventory
+      ansible.builtin.replace:
+        path: /home/{{ ansible_user }}/{{ extracted_name }}/install-inventory 
+        regexp: "{{ item.regex }}"
+        replace: "{{ item.replc }}"
+      loop: 
+        - { regex: '<set your own>$', replc: "{{ aap_admin_password }}" }
+        - { regex: 'aap.example.org$', replc: "{{ aap_hostname }}" }
+        - { regex: '<your RHN username>$', replc: "{{ rh_username }}" }
+        - { regex: '<your RHN password>$', replc: "{{ rh_password }}" }
+      loop_control:
+        label: "{{ item.regex }}"
+
+    - name: Ensure ansible_host is defined for automation gateway (bug in 2.6-5 https://access.redhat.com/solutions/7137518)
+      community.general.ini_file:
+        path: /home/{{ ansible_user }}/{{ extracted_name }}/install-inventory 
+        section: "all:vars"
+        option: ansible_host 
+        value: "{{ aap_hostname }}"
+
+    - name: run the Automation Controller installer
+      shell: "ansible-playbook -i install-inventory -e create_preload_data=False ansible.containerized_installer.install"
+      args:
+        chdir: "/home/{{ ansible_user }}/{{ extracted_name }}"
+      async: 4800
+      poll: 60
+      become: no
