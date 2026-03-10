@@ -67,3 +67,7 @@
     - name: Refresh dynamic inventory
       ansible.builtin.meta:
         refresh_inventory
+
+    - name: Pause to give vms startup time 
+      ansible.builtin.pause:
+        seconds: 10 
