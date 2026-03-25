@@ -16,5 +16,7 @@
   ansible.builtin.import_playbook: ./03_satellite_install.yml
 - name: Configure Satellite for the demo
   ansible.builtin.import_playbook: ./04_satellite_configure.yml
+- name: Configure Satellite for the demo
+  ansible.builtin.import_playbook: ./04_satellite_scap_configure.yml
 - name: Configure the client VMs for the demo
   ansible.builtin.import_playbook: ./05_clients_configure.yml

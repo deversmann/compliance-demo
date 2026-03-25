@@ -1,2 +1,10 @@
-# kvm_host ansible_host=x.x.x.x ansible_user=sysadmin
-# localhost ansible_connection=local
+# kvm_host ansible_host=< kvm host > ansible_user=< kvm host admin user >
+
+# [all:vars]
+# ansible_user=sysadmin
+
+# sat_hostname="< satellite domain name >"
+# sat_server_url="https://{{ sat_hostname }}"
+# sat_org_name="Boatz and Hoez Inc"
+# sat_location="Beaver Falls PA"
+# sat_admin_username="admin"

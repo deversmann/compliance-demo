@@ -40,3 +40,7 @@
         permanent: true
         immediate: true
         offline: true
+
+    - name: Refresh dynamic inventory
+      ansible.builtin.meta:
+        refresh_inventory

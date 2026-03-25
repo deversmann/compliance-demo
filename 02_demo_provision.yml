@@ -3,7 +3,6 @@
   hosts: kvm_host 
   tags: [provision]
   become: true 
-  # satellite_systems defined in group_vars/all.yml
 
   tasks:
     - name: Ensure kickstart files exist where libvirt can grab them 
@@ -55,6 +54,11 @@
       loop: "{{ satellite_systems | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
+      failed_when: false # <- added to try to remedy intermittent error shown below:
+      # FAILED - RETRYING: [kvm_host]: Wait for kickstart to complete and shutdown vms (20 retries left).
+      # fatal: [kvm_host]: FAILED! => {"msg": "The conditional check 'vm_status.status == 'shutdown'' failed. 
+      # The error was: error while evaluating conditional (vm_status.status == 'shutdown'): 'dict object' has 
+      # no attribute 'status'. 'dict object' has no attribute 'status'"}
 
     - name: Start up the VMs
       community.libvirt.virt:

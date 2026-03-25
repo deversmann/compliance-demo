@@ -1,17 +1,11 @@
 ---
 - name: Validation
-  hosts: kvm_host, localhost
+  hosts: kvm_host
   tags: [validation]
 
   vars:
     images_dir: "/var/lib/libvirt/images/"
     required_files:
-      localhost: |
-        {{ satellite_systems | 
-        dict2items | 
-        map(attribute='value.vm_kickstart_file') | 
-        unique | 
-        map('regex_replace', '^', "templates/ks/") }}
       kvm_host: |
         {{ satellite_systems | 
         dict2items | 
@@ -28,11 +22,4 @@
         get_attributes: false
       register: file_stats
       loop: "{{ required_files[inventory_hostname] }}"
-
-    - name: Results
-      ansible.builtin.debug:
-        msg: "{{ item.stat.exists | default(false) | ternary('exists', 'missing') }}"
-      loop: "{{ file_stats.results }}"
-      loop_control:
-        label: "{{ item.item }}"
-      failed_when: not item.stat.exists
+      failed_when: not file_stats.stat.exists
