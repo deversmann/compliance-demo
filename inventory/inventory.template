@@ -1,10 +1,12 @@
-# kvm_host ansible_host=< kvm host > ansible_user=< kvm host admin user >
+# kvm_host ansible_host=<KVM_HOST> ansible_user=<KVM_HOST_ADMIN_USER>
 
 # [all:vars]
 # ansible_user=sysadmin
-
-# sat_hostname="< satellite domain name >"
-# sat_server_url="https://{{ sat_hostname }}"
+# base_domain=<BASE_DOMAIN> 
 # sat_org_name="Boatz and Hoez Inc"
 # sat_location="Beaver Falls PA"
 # sat_admin_username="admin"
+
+# aap_hostname=aap.{{ base_domain }}
+# sat_hostname="satellite.{{ base_domain }}"
+# sat_server_url="https://{{ sat_hostname }}"
