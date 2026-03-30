@@ -4,7 +4,7 @@
   become: true 
   
   vars:
-    install_tarball: "ansible-automation-platform-containerized-setup-2.6-5.tar.gz"
+    install_tarball: "ansible-automation-platform-containerized-setup-2.6-6.tar.gz"
     extracted_name: "{{ install_tarball | regex_replace('\\.tar\\.gz$', '') }}"
     aap_admin_password: "{{ sat_admin_password }}"
 
