@@ -10,3 +10,6 @@ ansible-navigator.log
 ansible.cfg
 inventory/inventory 
 inventory/inventory.libvirt.yml 
+ansible-automation-platform-containerized-setup-2.6-5.tar.gz
+.gitignore
+ansible-automation-platform-containerized-setup-2.6-6.tar.gz
