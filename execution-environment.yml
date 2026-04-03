@@ -2,7 +2,7 @@
 version: 3
 images:
   base_image:
-    name: registry.fedoraproject.org/fedora:42
+    name: registry.fedoraproject.org/fedora:43
     options:
       pull_policy: missing
       tls_verify: false
@@ -24,6 +24,7 @@ dependencies:
     - pkgconfig
     - lxml
     - libvirt-python
+    - ansible-lint
   system:
     - git [platform:redhat]
     - pkg-config [platform:redhat]
@@ -53,4 +54,4 @@ additional_build_steps:
 options:
   package_manager_path: /usr/bin/microdnf
   tags:
-      - quay.io/deversmarht/compliance_ee:2.0
+      - quay.io/deversmarht/compliance_ee:2.1

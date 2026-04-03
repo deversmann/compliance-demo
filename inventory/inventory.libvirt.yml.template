@@ -1,6 +1,6 @@
 ---
 plugin: community.libvirt.libvirt 
-uri: 'qemu+ssh://< kvm host admin user >@< kvm host >/system'
+uri: 'qemu+ssh://<KVM_HOST_ADMIN_USER>@<KVM_HOST>/system'
 
 networks:
   - name: default

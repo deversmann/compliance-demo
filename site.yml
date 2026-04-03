@@ -17,6 +17,8 @@
 - name: Configure Satellite for the demo
   ansible.builtin.import_playbook: ./04_satellite_configure.yml
 - name: Configure Satellite for the demo
-  ansible.builtin.import_playbook: ./04_satellite_scap_configure.yml
+  ansible.builtin.import_playbook: ./05_satellite_scap_configure.yml
 - name: Configure the client VMs for the demo
-  ansible.builtin.import_playbook: ./05_clients_configure.yml
+  ansible.builtin.import_playbook: ./06_clients_configure.yml
+- name: Install AAP
+  ansible.builtin.import_playbook: ./07_aap_install.yml

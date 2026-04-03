@@ -1,14 +1,4 @@
 --- 
-ansible_user: sysadmin
-
-base_domain: aj.peripatetic.us 
-aap_hostname: aap.{{ base_domain }}
-sat_hostname: "satellite.{{ base_domain }}"
-
-sat_org_name: "of Strangers"
-sat_location: "Homelab"
-sat_admin_username: "admin"
-
 satellite_systems:
   satellite: 
     vm_memory: 33554
